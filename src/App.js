@@ -1,26 +1,48 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import { useQuery, useMutation } from '@apollo/react-hooks';
 
-function App() {
+import Signup from './Signup';
+import Login from './Login';
+
+import { CURRENT_USER_QUERY } from './queries';
+import { LOGOUT_MUTATON } from './mutations';
+
+const App = () => {
+  const { loading, error, data } = useQuery(CURRENT_USER_QUERY);
+  const [logout] = useMutation(LOGOUT_MUTATON, {
+    update: (cache) =>
+      cache.writeQuery({
+        query: CURRENT_USER_QUERY,
+        data: { currentUser: null },
+      }),
+  });
+
+  if (loading) return <div>Loadin</div>;
+  if (error) return <div>Error: {JSON.stringify(error)}</div>;
+
+  const isLoggedIn = !!data.currentUser;
+
+  if (isLoggedIn) {
+    const { id, firstName, lastName, email } = data.currentUser;
+
+    return (
+      <React.Fragment>
+        {id}
+        <br />
+        {firstName} {lastName}
+        <br />
+        {email}
+        <button onClick={() => logout()}>logout</button>
+      </React.Fragment>
+    );
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <React.Fragment>
+      <Signup />
+      <Login />
+    </React.Fragment>
   );
-}
+};
 
 export default App;
